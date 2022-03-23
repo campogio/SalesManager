@@ -144,7 +144,50 @@ def load_sales():
     #TODO
     # -RUN TROUGH GLOBAL SALES
     # -CHECK FOREACH TO PUT IN DAYLY,MONTHLY,YEARLY
-    pass
+    global  total_sales
+    global  yearly_sales
+    global  monthly_sales
+    global  daily_sales
+
+    with open('total_sales.json') as sales:
+        total_sales = json.load(sales)
+
+    for item in total_sales:
+
+        name= total_sales[item]['name']
+        buyprice= total_sales[item]['buyprice']
+        sellprice= total_sales[item]['sellprice']
+        quantity= total_sales[item]['quantity']
+        gainpercent= total_sales[item]['gainpercent']
+        buydate= total_sales[item]['buydate']
+        selldate= total_sales[item]['selldate']
+        fromstore= total_sales[item]['fromstore']
+        tostore= total_sales[item]['tostore']
+
+        totalsales_table.insert(parent='',index=END,values=(item,name,buyprice,sellprice,quantity,gainpercent,
+                                                            buydate,selldate,fromstore,tostore))
+
+        if is_this_year(selldate):
+            yearly_sales[item]= total_sales[item]
+            monthly_sales[item]= total_sales[item]
+            daily_sales[item]= total_sales[item]
+            yearlysales_table.insert(parent='',index=END,values=(item,name,buyprice,sellprice,quantity,gainpercent,
+                                                            buydate,selldate,fromstore,tostore))
+            monthlysales_table.insert(parent='', index=END,values=(item, name, buyprice, sellprice, quantity, gainpercent,
+                                                            buydate, selldate, fromstore, tostore))
+            dailysales_table.insert(parent='', index=END,values=(item, name, buyprice, sellprice, quantity, gainpercent,
+                                                            buydate, selldate, fromstore, tostore))
+        elif is_this_month(selldate):
+            monthly_sales[item] = total_sales[item]
+            daily_sales[item] = total_sales[item]
+            monthlysales_table.insert(parent='', index=END,values=(item, name, buyprice, sellprice, quantity, gainpercent,
+                                                buydate, selldate, fromstore, tostore))
+            dailysales_table.insert(parent='', index=END,values=(item, name, buyprice, sellprice, quantity, gainpercent,
+                                                buydate, selldate, fromstore, tostore))
+        elif is_this_day(selldate):
+            daily_sales[item] = total_sales[item]
+            dailysales_table.insert(parent='', index=END,values=(item, name, buyprice, sellprice, quantity, gainpercent,
+                                                buydate, selldate, fromstore, tostore))
 
 def purchasecurrent():
     global inventory_id
@@ -157,7 +200,7 @@ def purchasecurrent():
     tradelock = tradelock_entry.get()
     store = purchasestore_combobox.get()
     notes = notes_entry.get()
-    date = calendar_date.get_date()
+    date = calendar_date.selection_get()
 
     if name == '' or paid == '' or expected == '' or quantity == '' or store == '':
         print("Invalid Data")
@@ -168,9 +211,8 @@ def purchasecurrent():
         else:
             tradelock = int(tradelock)
 
-        tradelockdate = dt.datetime.strptime(date, "%d/%m/%y")
 
-        tradelockdate = tradelockdate.date()
+        tradelockdate = date
 
         date = tradelockdate.isoformat()
 
@@ -246,16 +288,11 @@ def sell_item():
     sale_calendar_date = Calendar(sale_window, date_pattern='dd/mm/yy')
     sale_calendar_date.grid(column=3, row=1, pady=(10, 10), padx=(0, 10), rowspan=5)
 
-    date = dt.datetime.strptime(sale_calendar_date.get_date(), "%d/%m/%y").date()
-
     sale_confirm_button = Button(sale_window, text='Confirm Sale', command=lambda:
     finalize_sale(item_values[0], item_values[1], sale_paid_entry.get(), sale_got_entry.get(),
-                  sale_quantity_entry.get(), item_values[5], date.isoformat(), item_values[7],
+                  sale_quantity_entry.get(), item_values[5], sale_calendar_date.selection_get().isoformat(), item_values[7],
                   sale_soldat_combobox.get(),item_values[4], sale_window))
     sale_confirm_button.grid(column=0, row=5, pady=(10, 0), columnspan=2)
-
-
-    pass
 
 
 def finalize_sale(id, name, buyprice, sellprice, quantity, buydate, selldate, fromstore, tostore,oldquantity, salewindow):
@@ -276,7 +313,6 @@ def finalize_sale(id, name, buyprice, sellprice, quantity, buydate, selldate, fr
 
     item_values = [sale_id,name,buyprice,sellprice,quantity,str(percentgain),buydate,selldate,fromstore,tostore]
 
-    print(total_sales[sale_id])
 
     if is_this_day(selldate):
         daily_sales[sale_id] = total_sales[sale_id]
@@ -526,13 +562,16 @@ configure_sales_table(dailysales_table)
 
 dailysales_table.pack()
 
+load_sales()
+
 mainloop()
 
 # TODO
-# -SAVE INVENTORY BACK TO FILE
-# -SAVE INVENTORY ID BACK TO FILE
-# -SAVE SALES BACK TO FILE
+#   -SAVE INVENTORY BACK TO FILE
+#   -SAVE INVENTORY ID BACK TO FILE
+#   -SAVE SALES BACK TO FILE
 
 
 save_inventory()
 save_inventory_id()
+save_total_sales()
