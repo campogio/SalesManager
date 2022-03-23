@@ -230,13 +230,39 @@ def purchasecurrent():
         save_inventory_id()
 
 
-def change_storage_inv():
-    # TODO
-    # -GET COMBOBOX INFO
-    # -CHANGE ITEM INFO IN INVENTORY AND TABLE
-    # -UPDATE INVENTORY
+def change_storage_inv(newstorage):
 
-    pass
+    global inventory
+
+    item_values = inventory_table.item(inventory_table.focus(), 'values')
+    item_id = item_values[0]
+
+    inventory[item_id]['store'] = newstorage
+
+    inventory_selected = inventory_table.focus()
+
+    inventory_table.item(inventory_selected,
+                         values=(
+                         item_values[0], item_values[1], item_values[2], item_values[3], item_values[4], item_values[5],
+                         item_values[6], newstorage, item_values[8]))
+    save_inventory()
+
+def add_tradelock(days):
+    global inventory
+
+    item_values= inventory_table.item(inventory_table.focus(), 'values')
+    item_id = item_values[0]
+
+    tradelock =datetime.date.today() + datetime.timedelta(days=int(days))
+
+    inventory[item_id]['tradelockdate'] = tradelock.isoformat()
+
+    inventory_selected = inventory_table.focus()
+
+    inventory_table.item(inventory_selected,
+                         values=(item_values[0], item_values[1], item_values[2], item_values[3], item_values[4], item_values[5],
+                                 tradelock.isoformat(), item_values[7], item_values[8]))
+    save_inventory()
 
 
 def sell_item():
@@ -515,19 +541,19 @@ inventory_table.grid(column=0, row=0, columnspan=6)
 change_tradelock_entry = Entry(currentinv_tab, width=50, justify='center')
 change_tradelock_entry.grid(column=0, row=1)
 
-change_tradelock_button = Button(currentinv_tab, text='Add tradelock(days)')
+change_tradelock_button = Button(currentinv_tab, text='Add tradelock(days)',command= lambda: add_tradelock(change_tradelock_entry.get()))
 change_tradelock_button.grid(column=1, row=1)
 
 changestorage_combobox = ttk.Combobox(currentinv_tab, width=47, values=store_names)
 changestorage_combobox.grid(column=0, row=2, pady=(20, 0))
 
-changestorage_button = Button(currentinv_tab, text='Change Storage', command=change_storage_inv)
+changestorage_button = Button(currentinv_tab, text='Change Storage', command=lambda: change_storage_inv(changestorage_combobox.get()))
 changestorage_button.grid(column=1, row=2, pady=(20, 0))
 
 sale_button = Button(currentinv_tab, text='Sell Item', command=sell_item)
 sale_button.grid(column=4, row=3, pady=(20, 0))
 
-removefrominv_button = Button(currentinv_tab, text='Remove Item(Unregister)', command=remove_from_inv)
+removefrominv_button = Button(currentinv_tab, text='Remove Item(Unregister)', command= lambda: remove_from_inv())
 removefrominv_button.grid(column=0, row=3, pady=(20, 0))
 
 load_inventory()
