@@ -12,6 +12,7 @@ store_names = ['Steam', 'Skinport', 'Dmarket', 'BUFF163', 'Skinbaron', 'Bitskins
                'Customer Sale']
 
 inventory_id = 0
+sale_id = 0
 inventory = {}
 total_sales = {}
 yearly_sales = {}
@@ -22,11 +23,15 @@ with open('inventory_id.json') as file:
     data = json.load(file)
     inventory_id = data
 
+with open('sales_id.json') as file:
+    data = json.load(file)
+    sale_id = data
+
 # id_file = open('inventory_id.json')
 
 #databuff_file = open('../data.json')
 
-#atabuff = json.load(databuff_file)
+#databuff = json.load(databuff_file)
 
 #databuff_file.close()
 
@@ -74,10 +79,18 @@ def save_inventory():
     with open('inventory.json', 'w') as inv:
         json.dump(inventory, inv)
 
+def save_total_sales():
+    with open('total_sales.json', 'w') as sales:
+        json.dump(total_sales, sales)
+
 
 def save_inventory_id():
     with open('inventory_id.json', 'w') as fileid:
         json.dump(inventory_id, fileid)
+
+def save_sales_id():
+    with open('sales_id.json', 'w') as fileid:
+        json.dump(sale_id, fileid)
 
 
 def configure_sales_table(table):
@@ -127,6 +140,11 @@ def load_inventory():
         inventory_table.insert(parent='', index='end',
                                values=(item, name, paid, expected, quantity, date, tradelockdate, store, notes))
 
+def load_sales():
+    #TODO
+    # -RUN TROUGH GLOBAL SALES
+    # -CHECK FOREACH TO PUT IN DAYLY,MONTHLY,YEARLY
+    pass
 
 def purchasecurrent():
     global inventory_id
@@ -180,9 +198,6 @@ def change_storage_inv():
 
 
 def sell_item():
-    # TODO
-    # -ADD ITEM TO SALES TABLE
-    # -REMOVE ITEM (OR ITEM QUANTITY) FROM INVENTORY
 
     sale_window = Toplevel(window)
 
@@ -236,47 +251,71 @@ def sell_item():
     sale_confirm_button = Button(sale_window, text='Confirm Sale', command=lambda:
     finalize_sale(item_values[0], item_values[1], sale_paid_entry.get(), sale_got_entry.get(),
                   sale_quantity_entry.get(), item_values[5], date.isoformat(), item_values[7],
-                  sale_soldat_combobox.get(), sale_window))
+                  sale_soldat_combobox.get(),item_values[4], sale_window))
     sale_confirm_button.grid(column=0, row=5, pady=(10, 0), columnspan=2)
+
 
     pass
 
 
-def finalize_sale(id, name, buyprice, sellprice, quantity, buydate, selldate, fromstore, tostore, salewindow):
+def finalize_sale(id, name, buyprice, sellprice, quantity, buydate, selldate, fromstore, tostore,oldquantity, salewindow):
 
-    # TODO
-    #  -STORE SALES IN SALES FILE
-    #  -DESTROY FINALIZE SALE WINDOW
-    #  -REMOVE ITEM OR QUANTITY OF ITEM FROM INVENTORY
 
     global total_sales
+    global sale_id
+
+    old_item_values = inventory_table.item(inventory_table.focus(), 'values')
+
 
     percentgain = ((float(sellprice) / float(buyprice)) - 1) * 100
     percentgain = round(percentgain, 2)
 
-    total_sales[id] = {'name': name, 'buyprice': buyprice,
+    total_sales[sale_id] = {'name': name, 'buyprice': buyprice,
                        'sellprice': sellprice, 'quantity': quantity, 'gainpercent': str(percentgain),
                        'buydate': buydate, 'selldate': selldate, 'fromstore': fromstore, 'tostore': tostore}
 
-    item_values = [id,name,buyprice,sellprice,quantity,str(percentgain),buydate,selldate,fromstore,tostore]
+    item_values = [sale_id,name,buyprice,sellprice,quantity,str(percentgain),buydate,selldate,fromstore,tostore]
 
-    print(total_sales[id])
+    print(total_sales[sale_id])
 
     if is_this_day(selldate):
-        daily_sales[id] = total_sales[id]
-        monthly_sales[id] = total_sales[id]
-        yearly_sales[id] = total_sales[id]
-        dailysales_table.insert(parent='', index=END,
-                                values=item_values)
+        daily_sales[sale_id] = total_sales[sale_id]
+        monthly_sales[sale_id] = total_sales[sale_id]
+        yearly_sales[sale_id] = total_sales[sale_id]
+        dailysales_table.insert(parent='', index=END,values=item_values)
+        monthlysales_table.insert(parent='', index=END,values=item_values)
+        yearlysales_table.insert(parent='', index=END,values=item_values)
 
     elif is_this_month(selldate):
-        monthly_sales[id] = total_sales[id]
-        yearly_sales[id] = total_sales[id]
+        monthly_sales[sale_id] = total_sales[sale_id]
+        yearly_sales[sale_id] = total_sales[sale_id]
+        monthlysales_table.insert(parent='', index=END,values=item_values)
+        yearlysales_table.insert(parent='', index=END,values=item_values)
 
     elif is_this_year(selldate):
-        yearly_sales[id] = total_sales[id]
+        yearly_sales[sale_id] = total_sales[sale_id]
+        yearlysales_table.insert(parent='', index=END,values=item_values)
 
-    # salewindow.destroy()
+    totalsales_table.insert(parent='', index=END,values=item_values)
+
+    sale_id= sale_id+1
+    save_sales_id()
+
+    if int(quantity) == int(oldquantity):
+        remove_from_inv()
+    else:
+        inventory_selected = inventory_table.focus()
+        newquantity = int(oldquantity)-int(quantity)
+        inventory[str(id)] = {'name': name, 'paid': buyprice, 'expected': old_item_values[3], 'quantity': str(newquantity),
+                              'date': old_item_values[5], 'tradelockdate': old_item_values[6], 'store': old_item_values[7], 'notes': old_item_values[8]}
+        inventory_table.item(inventory_selected,
+                             values= (str(id),name,buyprice,old_item_values[3],str(newquantity),old_item_values[5],
+                                      old_item_values[6],old_item_values[7],old_item_values[8]))
+        save_inventory()
+
+    save_total_sales()
+
+    salewindow.destroy()
 
 
 def remove_from_inv():
