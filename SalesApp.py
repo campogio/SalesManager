@@ -11,6 +11,11 @@ currentresults = []
 store_names = ['Steam', 'Skinport', 'Dmarket', 'BUFF163', 'Skinbaron', 'Bitskins', 'Skinwallet', 'Skinbid',
                'Customer Sale']
 
+#TODO
+# -BUTTON TO UNREGISTER SALES
+# (GET SALE ID,IF SALE ID IN DAILY,MONTHLY,ETC UNREGISTER FROM THOSE TABLES/DICTS)
+
+
 inventory_id = 0
 sale_id = 0
 inventory = {}
@@ -18,6 +23,10 @@ total_sales = {}
 yearly_sales = {}
 monthly_sales = {}
 daily_sales = {}
+
+inventory_paid=0
+inventory_expected=0
+inventory_percentage=0
 
 with open('inventory_id.json') as file:
     data = json.load(file)
@@ -92,6 +101,106 @@ def save_sales_id():
     with open('sales_id.json', 'w') as fileid:
         json.dump(sale_id, fileid)
 
+def calculate_inventory_labels():
+    global inventory
+
+    global inventory_paid
+    global inventory_expected
+    global inventory_percentage
+
+    inventory_paid=0
+    inventory_expected=0
+    inventory_percentage=0
+
+    #Checks if dict is empty
+    if inventory:
+        for item in inventory:
+            item_quantity= float(inventory[item]['quantity'])
+            inventory_paid= inventory_paid+ (float(inventory[item]['paid'])*item_quantity)
+            inventory_expected=inventory_expected+ (float(inventory[item]['expected'])*item_quantity)
+
+        if inventory_paid != 0:
+            inventory_percentage = ((inventory_expected / inventory_paid) - 1) * 100
+            inventory_percentage = round(inventory_percentage,2)
+
+    money_currently_spent_label.config(text='Money spent: '+str(inventory_paid))
+    money_currently_expected_label.config(text='Money expected: '+str(inventory_expected))
+    inventory_percentage_gain_label.config(text='Percentage gain: '+str(inventory_percentage)+'%')
+
+def calculate_sales_labels():
+    global total_sales
+    global yearly_sales
+    global monthly_sales
+    global daily_sales
+
+    total_paid =0
+    total_sold=0
+    total_percentage=0
+    yearly_paid=0
+    yearly_sold=0
+    yearly_percentage=0
+    monthly_paid=0
+    monthly_sold=0
+    monthly_percentage=0
+    daily_paid=0
+    daily_sold=0
+    daily_percentage=0
+
+    for item in total_sales:
+        item_paid= float(total_sales[item]['buyprice'])
+        item_sold= float(total_sales[item]['sellprice'])
+        item_quantity= int(total_sales[item]['quantity'])
+        total_paid= total_paid + (item_paid*item_quantity)
+        total_sold= total_sold + (item_sold*item_quantity)
+        if item in daily_sales.keys():
+            daily_paid = daily_paid+(item_paid*item_quantity)
+            monthly_paid= monthly_paid+(item_paid*item_quantity)
+            yearly_paid= yearly_paid+(item_paid*item_quantity)
+            daily_sold= daily_sold+ (item_sold*item_quantity)
+            monthly_sold= monthly_sold+ (item_sold*item_quantity)
+            yearly_sold = yearly_sold+ (item_sold*item_quantity)
+            pass
+        elif item in monthly_sales.keys():
+            monthly_paid = monthly_paid + (item_paid * item_quantity)
+            yearly_paid = yearly_paid + (item_paid * item_quantity)
+            monthly_sold = monthly_sold + (item_sold * item_quantity)
+            yearly_sold = yearly_sold + (item_sold * item_quantity)
+            pass
+        elif item in yearly_sales.keys():
+            yearly_paid = yearly_paid + (item_paid * item_quantity)
+            yearly_sold = yearly_sold + (item_sold * item_quantity)
+            pass
+    if total_paid != 0:
+        total_percentage= ((total_sold / total_paid) - 1) * 100
+        total_percentage= round(total_percentage,2)
+    if daily_paid != 0:
+        daily_percentage= ((daily_sold / daily_paid) - 1) * 100
+        daily_percentage= round(daily_percentage,2)
+    if monthly_paid != 0:
+        monthly_percentage= ((monthly_sold / monthly_paid) - 1) * 100
+        monthly_percentage= round(monthly_percentage,2)
+    if yearly_paid != 0:
+        yearly_percentage= ((yearly_sold / yearly_paid) - 1) * 100
+        yearly_percentage= round(yearly_percentage,2)
+
+
+    money_daily_sold_label.config(text='Daily Money sold: '+str(daily_sold))
+    money_monthly_sold_label.config(text='Monthly Money sold: '+str(monthly_sold))
+    money_yearly_sold_label.config(text='Yearly Money sold: '+str(yearly_sold))
+    money_total_sold_label.config(text='Total Money sold: '+str(total_sold))
+
+    money_daily_spent_label.config(text='Daily Money spent: '+str(daily_paid))
+    money_monthly_spent_label.config(text='Monthly Money spent: '+str(monthly_paid))
+    money_yearly_spent_label.config(text='Yearly Money spent: '+str(yearly_paid))
+    money_total_spent_label.config(text='Total Money spent: '+str(total_paid))
+
+    daily_percentage_gain_label.config(text='Percentage gain: '+str(daily_percentage)+'%')
+    monthly_percentage_gain_label.config(text='Percentage gain: '+str(monthly_percentage)+'%')
+    yearly_percentage_gain_label.config(text='Percentage gain: '+str(yearly_percentage)+'%')
+    total_percentage_gain_label.config(text='Percentage gain: '+str(total_percentage)+'%')
+
+
+
 
 def configure_sales_table(table):
     table['columns'] = (
@@ -139,6 +248,8 @@ def load_inventory():
 
         inventory_table.insert(parent='', index='end',
                                values=(item, name, paid, expected, quantity, date, tradelockdate, store, notes))
+
+    calculate_inventory_labels()
 
 def load_sales():
     #TODO
@@ -229,6 +340,7 @@ def purchasecurrent():
         save_inventory()
         save_inventory_id()
 
+        calculate_inventory_labels()
 
 def change_storage_inv(newstorage):
 
@@ -327,6 +439,7 @@ def finalize_sale(id, name, buyprice, sellprice, quantity, buydate, selldate, fr
     global total_sales
     global sale_id
 
+
     old_item_values = inventory_table.item(inventory_table.focus(), 'values')
 
 
@@ -375,15 +488,21 @@ def finalize_sale(id, name, buyprice, sellprice, quantity, buydate, selldate, fr
                                       old_item_values[6],old_item_values[7],old_item_values[8]))
         save_inventory()
 
-    save_total_sales()
 
+    save_total_sales()
     salewindow.destroy()
+
+    calculate_inventory_labels()
+
+    calculate_sales_labels()
 
 
 def remove_from_inv():
     global inventory
 
-    item_id = inventory_table.item(inventory_table.focus(), 'values')[0]
+    item_values = inventory_table.item(inventory_table.focus(), 'values')
+
+    item_id = item_values[0]
 
     del inventory[item_id]
 
@@ -393,6 +512,8 @@ def remove_from_inv():
 
     save_inventory()
 
+
+    calculate_inventory_labels  ()
 
 def filter_entries(event):
     results = []
@@ -512,6 +633,20 @@ calendar_date.grid(column=3, row=1)
 
 
 ############ START INVENTORY TAB ##################
+money_currently_spent = 0
+money_currently_spent_label= Label(currentinv_tab,text='Money spent: '+str(money_currently_spent))
+
+money_currently_expected = 0
+money_currently_expected_label= Label(currentinv_tab,text='Money expected: '+str(money_currently_expected))
+
+inventory_percentage_gain= 0
+inventory_percentage_gain_label= Label(currentinv_tab,text='Percentage gain: '+str(inventory_percentage_gain)+'%')
+
+money_currently_spent_label.grid(column=1,row=0)
+money_currently_expected_label.grid(column=2,row=0)
+inventory_percentage_gain_label.grid(column=3,row=0)
+
+
 inventory_table = ttk.Treeview(currentinv_tab)
 inventory_table['columns'] = ('id', 'name', 'paid', 'expected', 'quantity', 'buydate', 'tradelock', 'storage', 'notes')
 inventory_table.column("#0", width=0, stretch=NO)
@@ -536,67 +671,114 @@ inventory_table.heading("tradelock", text="Tradelock", anchor=CENTER)
 inventory_table.heading("storage", text="Stored at", anchor=CENTER)
 inventory_table.heading("notes", text="Notes", anchor=CENTER)
 
-inventory_table.grid(column=0, row=0, columnspan=6)
+inventory_table.grid(column=0, row=1, columnspan=6)
 
 change_tradelock_entry = Entry(currentinv_tab, width=50, justify='center')
-change_tradelock_entry.grid(column=0, row=1)
+change_tradelock_entry.grid(column=0, row=2,pady=(10,0))
 
 change_tradelock_button = Button(currentinv_tab, text='Add tradelock(days)',command= lambda: add_tradelock(change_tradelock_entry.get()))
-change_tradelock_button.grid(column=1, row=1)
+change_tradelock_button.grid(column=1, row=2,pady=(10,0))
 
 changestorage_combobox = ttk.Combobox(currentinv_tab, width=47, values=store_names)
-changestorage_combobox.grid(column=0, row=2, pady=(20, 0))
+changestorage_combobox.grid(column=0, row=3, pady=(20, 0))
 
 changestorage_button = Button(currentinv_tab, text='Change Storage', command=lambda: change_storage_inv(changestorage_combobox.get()))
-changestorage_button.grid(column=1, row=2, pady=(20, 0))
+changestorage_button.grid(column=1, row=3, pady=(20, 0))
 
 sale_button = Button(currentinv_tab, text='Sell Item', command=sell_item)
-sale_button.grid(column=4, row=3, pady=(20, 0))
+sale_button.grid(column=4, row=4, pady=(20, 0))
 
 removefrominv_button = Button(currentinv_tab, text='Remove Item(Unregister)', command= lambda: remove_from_inv())
-removefrominv_button.grid(column=0, row=3, pady=(20, 0))
+removefrominv_button.grid(column=0, row=4, pady=(20, 0))
 
 load_inventory()
 
 ################ END INVENTORY TAB ##################
 
 ################ TOTAL SALES TAB ####################
+money_total_spent = 0
+money_total_spent_label= Label(totalsales_tab,text='Total Money spent: '+str(money_total_spent))
+
+money_total_sold = 0
+money_total_sold_label= Label(totalsales_tab,text='Total Money sold: '+str(money_total_sold))
+
+total_percentage_gain= 0
+total_percentage_gain_label= Label(totalsales_tab,text='TotalPercentage gain: '+str(total_percentage_gain)+'%')
+
+money_total_spent_label.grid(column=2,row=0,pady=(10,0))
+money_total_sold_label.grid(column=3,row=0,pady=(10,0))
+total_percentage_gain_label.grid(column=4,row=0,pady=(10,0))
 
 totalsales_table = ttk.Treeview(totalsales_tab)
 configure_sales_table(totalsales_table)
 
-totalsales_table.pack()
+totalsales_table.grid(column=0,row=1,columnspan=5,pady=(10,0))
+
 
 ################ YEARLY SALES TAB ####################
+money_yearly_spent = 0
+money_yearly_spent_label= Label(yearlysales_tab,text='Total Money spent: '+str(money_yearly_spent))
+
+money_yearly_sold = 0
+money_yearly_sold_label= Label(yearlysales_tab,text='Total Money sold: '+str(money_yearly_sold))
+
+yearly_percentage_gain= 0
+yearly_percentage_gain_label= Label(yearlysales_tab,text='TotalPercentage gain: '+str(yearly_percentage_gain)+'%')
+
+money_yearly_spent_label.grid(column=2,row=0,pady=(10,0))
+money_yearly_sold_label.grid(column=3,row=0,pady=(10,0))
+yearly_percentage_gain_label.grid(column=4,row=0,pady=(10,0))
 
 yearlysales_table = ttk.Treeview(yearlysales_tab)
 configure_sales_table(yearlysales_table)
 
-yearlysales_table.pack()
+yearlysales_table.grid(column=0,row=1,columnspan=5,pady=(10,0))
 
 ################ MONTHLY SALES TAB ####################
+
+money_monthly_spent = 0
+money_monthly_spent_label= Label(monthlysales_tab,text='Total Money spent: '+str(money_monthly_spent))
+
+money_monthly_sold = 0
+money_monthly_sold_label= Label(monthlysales_tab,text='Total Money sold: '+str(money_monthly_sold))
+
+monthly_percentage_gain= 0
+monthly_percentage_gain_label= Label(monthlysales_tab,text='TotalPercentage gain: '+str(monthly_percentage_gain)+'%')
+
+money_monthly_spent_label.grid(column=2,row=0,pady=(10,0))
+money_monthly_sold_label.grid(column=3,row=0,pady=(10,0))
+monthly_percentage_gain_label.grid(column=4,row=0,pady=(10,0))
 
 monthlysales_table = ttk.Treeview(monthlysales_tab)
 configure_sales_table(monthlysales_table)
 
-monthlysales_table.pack()
+monthlysales_table.grid(column=0,row=1,columnspan=5,pady=(10,0))
 
 ################# DAILY SALES TAB ######################
+
+money_daily_spent = 0
+money_daily_spent_label= Label(dailysales_tab,text='Total Money spent: '+str(money_daily_spent))
+
+money_daily_sold = 0
+money_daily_sold_label= Label(dailysales_tab,text='Total Money sold: '+str(money_daily_sold))
+
+daily_percentage_gain= 0
+daily_percentage_gain_label= Label(dailysales_tab,text='TotalPercentage gain: '+str(daily_percentage_gain)+'%')
+
+money_daily_spent_label.grid(column=2,row=0,pady=(10,0))
+money_daily_sold_label.grid(column=3,row=0,pady=(10,0))
+daily_percentage_gain_label.grid(column=4,row=0,pady=(10,0))
 
 dailysales_table = ttk.Treeview(dailysales_tab)
 configure_sales_table(dailysales_table)
 
-dailysales_table.pack()
+dailysales_table.grid(column=0,row=1,columnspan=5,pady=(10,0))
 
 load_sales()
 
+calculate_sales_labels()
+
 mainloop()
-
-# TODO
-#   -SAVE INVENTORY BACK TO FILE
-#   -SAVE INVENTORY ID BACK TO FILE
-#   -SAVE SALES BACK TO FILE
-
 
 save_inventory()
 save_inventory_id()
