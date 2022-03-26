@@ -252,9 +252,6 @@ def load_inventory():
     calculate_inventory_labels()
 
 def load_sales():
-    #TODO
-    # -RUN TROUGH GLOBAL SALES
-    # -CHECK FOREACH TO PUT IN DAYLY,MONTHLY,YEARLY
     global  total_sales
     global  yearly_sales
     global  monthly_sales
@@ -276,29 +273,36 @@ def load_sales():
         tostore= total_sales[item]['tostore']
 
         totalsales_table.insert(parent='',index=END,values=(item,name,buyprice,sellprice,quantity,gainpercent,
-                                                            buydate,selldate,fromstore,tostore))
+                                                              buydate,selldate,fromstore,tostore))
 
-        if is_this_year(selldate):
-            yearly_sales[item]= total_sales[item]
-            monthly_sales[item]= total_sales[item]
-            daily_sales[item]= total_sales[item]
-            yearlysales_table.insert(parent='',index=END,values=(item,name,buyprice,sellprice,quantity,gainpercent,
-                                                            buydate,selldate,fromstore,tostore))
-            monthlysales_table.insert(parent='', index=END,values=(item, name, buyprice, sellprice, quantity, gainpercent,
-                                                            buydate, selldate, fromstore, tostore))
-            dailysales_table.insert(parent='', index=END,values=(item, name, buyprice, sellprice, quantity, gainpercent,
-                                                            buydate, selldate, fromstore, tostore))
-        elif is_this_month(selldate):
+
+        if is_this_day(selldate):
+            yearly_sales[item] = total_sales[item]
             monthly_sales[item] = total_sales[item]
             daily_sales[item] = total_sales[item]
-            monthlysales_table.insert(parent='', index=END,values=(item, name, buyprice, sellprice, quantity, gainpercent,
-                                                buydate, selldate, fromstore, tostore))
-            dailysales_table.insert(parent='', index=END,values=(item, name, buyprice, sellprice, quantity, gainpercent,
-                                                buydate, selldate, fromstore, tostore))
+            yearlysales_table.insert(parent='', index=END,
+                                     values=(item, name, buyprice, sellprice, quantity, gainpercent,
+                                             buydate, selldate, fromstore, tostore))
+            monthlysales_table.insert(parent='', index=END,
+                                      values=(item, name, buyprice, sellprice, quantity, gainpercent,
+                                              buydate, selldate, fromstore, tostore))
+            dailysales_table.insert(parent='', index=END,
+                                    values=(item, name, buyprice, sellprice, quantity, gainpercent,
+                                            buydate, selldate, fromstore, tostore))
+        elif is_this_month(selldate):
+            yearly_sales[item] = total_sales[item]
+            monthly_sales[item] = total_sales[item]
+            yearlysales_table.insert(parent='', index=END,
+                                     values=(item, name, buyprice, sellprice, quantity, gainpercent,
+                                             buydate, selldate, fromstore, tostore))
+            monthlysales_table.insert(parent='', index=END,
+                                      values=(item, name, buyprice, sellprice, quantity, gainpercent,
+                                              buydate, selldate, fromstore, tostore))
         elif is_this_day(selldate):
             daily_sales[item] = total_sales[item]
-            dailysales_table.insert(parent='', index=END,values=(item, name, buyprice, sellprice, quantity, gainpercent,
-                                                buydate, selldate, fromstore, tostore))
+            dailysales_table.insert(parent='', index=END,
+                                    values=(item, name, buyprice, sellprice, quantity, gainpercent,
+                                            buydate, selldate, fromstore, tostore))
 
 def purchasecurrent():
     global inventory_id
