@@ -298,11 +298,11 @@ def load_sales():
             monthlysales_table.insert(parent='', index=END,
                                       values=(item, name, buyprice, sellprice, quantity, gainpercent,
                                               buydate, selldate, fromstore, tostore))
-        elif is_this_day(selldate):
-            daily_sales[item] = total_sales[item]
-            dailysales_table.insert(parent='', index=END,
-                                    values=(item, name, buyprice, sellprice, quantity, gainpercent,
-                                            buydate, selldate, fromstore, tostore))
+        elif is_this_year(selldate):
+            yearly_sales[item] = total_sales[item]
+            yearlysales_table.insert(parent='', index=END,
+                                     values=(item, name, buyprice, sellprice, quantity, gainpercent,
+                                             buydate, selldate, fromstore, tostore))
 
 def purchasecurrent():
     global inventory_id
