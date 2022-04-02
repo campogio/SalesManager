@@ -12,3 +12,7 @@ The system requires you to use decimal points (".") for float numbers, using a c
 
 Currently does not support unregistering items from sales, be careful and double check your data when registering sales, if you make a mistake, you may delete
 the sale record from total_sales.json
+
+# Updating
+
+To update to a newer version without losing previous sales, overwriting SalesApp.exe with the newer version should be enough.
