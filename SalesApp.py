@@ -27,6 +27,7 @@ daily_sales = {}
 inventory_paid=0
 inventory_expected=0
 inventory_percentage=0
+inventory_net=0
 
 with open('inventory_id.json') as file:
     data = json.load(file)
@@ -136,15 +137,22 @@ def calculate_sales_labels():
     total_paid =0
     total_sold=0
     total_percentage=0
+    total_net= 0
+
     yearly_paid=0
     yearly_sold=0
     yearly_percentage=0
+    yearly_net = 0
+
     monthly_paid=0
     monthly_sold=0
     monthly_percentage=0
+    monthly_net = 0
+
     daily_paid=0
     daily_sold=0
     daily_percentage=0
+    daily_net=0
 
     for item in total_sales:
         item_paid= float(total_sales[item]['buyprice'])
@@ -184,6 +192,30 @@ def calculate_sales_labels():
         yearly_percentage= round(yearly_percentage,2)
 
 
+    total_net = total_sold-total_paid
+    total_net = round(total_net,2)
+
+    yearly_net = yearly_sold-yearly_paid
+    yearly_net = round(yearly_net,2)
+
+    monthly_net= monthly_sold-monthly_paid
+    monthly_net= round(monthly_net,2)
+
+    daily_net = daily_sold-daily_paid
+    daily_net = round(daily_net,2)
+
+    daily_paid = round(daily_paid,2)
+    daily_sold = round(daily_sold,2)
+
+    monthly_paid = round(monthly_paid,2)
+    monthly_sold = round(monthly_sold,2)
+
+    yearly_paid = round(yearly_paid,2)
+    yearly_sold = round(yearly_sold,2)
+
+    total_paid = round(total_paid,2)
+    total_sold = round(total_sold,2)
+
     money_daily_sold_label.config(text='Daily Money sold: '+str(daily_sold))
     money_monthly_sold_label.config(text='Monthly Money sold: '+str(monthly_sold))
     money_yearly_sold_label.config(text='Yearly Money sold: '+str(yearly_sold))
@@ -198,6 +230,12 @@ def calculate_sales_labels():
     monthly_percentage_gain_label.config(text='Percentage gain: '+str(monthly_percentage)+'%')
     yearly_percentage_gain_label.config(text='Percentage gain: '+str(yearly_percentage)+'%')
     total_percentage_gain_label.config(text='Percentage gain: '+str(total_percentage)+'%')
+
+    money_daily_net_label.config(text='Total Net Money: '+str(daily_net))
+    money_monthly_net_label.config(text='Total Net Money: '+str(monthly_net))
+    money_yearly_net_label.config(text='Total Net Money: '+str(yearly_net))
+    money_total_net_label.config(text='Total Net Money: '+str(total_net))
+
 
 
 
@@ -706,11 +744,15 @@ money_total_spent_label= Label(totalsales_tab,text='Total Money spent: '+str(mon
 money_total_sold = 0
 money_total_sold_label= Label(totalsales_tab,text='Total Money sold: '+str(money_total_sold))
 
+total_net_gain = 0
+money_total_net_label= Label(totalsales_tab,text='Total Net Money: '+str(total_net_gain))
+
 total_percentage_gain= 0
 total_percentage_gain_label= Label(totalsales_tab,text='TotalPercentage gain: '+str(total_percentage_gain)+'%')
 
-money_total_spent_label.grid(column=2,row=0,pady=(10,0))
-money_total_sold_label.grid(column=3,row=0,pady=(10,0))
+money_total_spent_label.grid(column=1,row=0,pady=(10,0))
+money_total_sold_label.grid(column=2,row=0,pady=(10,0))
+money_total_net_label.grid(column=3,row=0,pady=(10,0))
 total_percentage_gain_label.grid(column=4,row=0,pady=(10,0))
 
 totalsales_table = ttk.Treeview(totalsales_tab)
@@ -726,11 +768,16 @@ money_yearly_spent_label= Label(yearlysales_tab,text='Total Money spent: '+str(m
 money_yearly_sold = 0
 money_yearly_sold_label= Label(yearlysales_tab,text='Total Money sold: '+str(money_yearly_sold))
 
+money_yearly_net = 0
+money_yearly_net_label= Label(yearlysales_tab,text='Total Net Money: '+str(money_yearly_net))
+
+
 yearly_percentage_gain= 0
 yearly_percentage_gain_label= Label(yearlysales_tab,text='TotalPercentage gain: '+str(yearly_percentage_gain)+'%')
 
-money_yearly_spent_label.grid(column=2,row=0,pady=(10,0))
-money_yearly_sold_label.grid(column=3,row=0,pady=(10,0))
+money_yearly_spent_label.grid(column=1,row=0,pady=(10,0))
+money_yearly_sold_label.grid(column=2,row=0,pady=(10,0))
+money_yearly_net_label.grid(column=3,row=0,pady=(10,0))
 yearly_percentage_gain_label.grid(column=4,row=0,pady=(10,0))
 
 yearlysales_table = ttk.Treeview(yearlysales_tab)
@@ -746,11 +793,15 @@ money_monthly_spent_label= Label(monthlysales_tab,text='Total Money spent: '+str
 money_monthly_sold = 0
 money_monthly_sold_label= Label(monthlysales_tab,text='Total Money sold: '+str(money_monthly_sold))
 
+money_monthly_net = 0
+money_monthly_net_label= Label(monthlysales_tab,text='Total Net Money: '+str(money_monthly_net))
+
 monthly_percentage_gain= 0
 monthly_percentage_gain_label= Label(monthlysales_tab,text='TotalPercentage gain: '+str(monthly_percentage_gain)+'%')
 
-money_monthly_spent_label.grid(column=2,row=0,pady=(10,0))
-money_monthly_sold_label.grid(column=3,row=0,pady=(10,0))
+money_monthly_spent_label.grid(column=1,row=0,pady=(10,0))
+money_monthly_sold_label.grid(column=2,row=0,pady=(10,0))
+money_monthly_net_label.grid(column=3,row=0,pady=(10,0))
 monthly_percentage_gain_label.grid(column=4,row=0,pady=(10,0))
 
 monthlysales_table = ttk.Treeview(monthlysales_tab)
@@ -766,11 +817,15 @@ money_daily_spent_label= Label(dailysales_tab,text='Total Money spent: '+str(mon
 money_daily_sold = 0
 money_daily_sold_label= Label(dailysales_tab,text='Total Money sold: '+str(money_daily_sold))
 
+money_daily_net = 0
+money_daily_net_label= Label(dailysales_tab,text='Total Net Money: '+str(money_daily_net))
+
 daily_percentage_gain= 0
 daily_percentage_gain_label= Label(dailysales_tab,text='TotalPercentage gain: '+str(daily_percentage_gain)+'%')
 
-money_daily_spent_label.grid(column=2,row=0,pady=(10,0))
-money_daily_sold_label.grid(column=3,row=0,pady=(10,0))
+money_daily_spent_label.grid(column=1,row=0,pady=(10,0))
+money_daily_sold_label.grid(column=2,row=0,pady=(10,0))
+money_daily_net_label.grid(column=3,row=0,pady=(10,0))
 daily_percentage_gain_label.grid(column=4,row=0,pady=(10,0))
 
 dailysales_table = ttk.Treeview(dailysales_tab)
