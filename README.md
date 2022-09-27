@@ -16,3 +16,13 @@ the sale record from total_sales.json
 # Updating
 
 To update to a newer version without losing previous sales, overwriting SalesApp.exe with the newer version should be enough.
+
+# Compiling from source
+
+There seems to be an issue where pyinstaller cannot find the babel.numbers import, the complete line for a clean install is:
+
+---
+
+pyinstaller --onefile --hidden-import babel.numbers --noconsole  SalesApp.py
+
+---
