@@ -7,6 +7,7 @@ import dateutil.parser
 import json
 
 currentresults = []
+currentinventory = {}
 
 store_names = ['Steam', 'Skinport', 'Dmarket', 'BUFF163', 'Skinbaron', 'Bitskins', 'Skinwallet', 'Skinbid',
                'Customer Sale']
@@ -578,6 +579,37 @@ def filter_entries(event):
     except Exception as e:
         print(e)
 
+def filter_inventory(event):
+    results = []
+    global currentinventory
+    global inventory
+
+    inventory_table.delete(*inventory_table.get_children())
+
+    try:
+        to_filter = filter_inv_var.get().lower()
+
+        filters = str(to_filter).split()
+
+        for item in inventory:
+            name = inventory[item]['name']
+            name_caseIns = name.lower()
+            if all(filt in name_caseIns for filt in filters):
+                results.append(name)
+                paid = inventory[item]['paid']
+                expected = inventory[item]['expected']
+                quantity = inventory[item]['quantity']
+                date = inventory[item]['date']
+                tradelockdate = inventory[item]['tradelockdate']
+                store = inventory[item]['store']
+                notes = inventory[item]['notes']
+
+                inventory_table.insert(parent='', index='end',
+                                       values=(item, name, paid, expected, quantity, date, tradelockdate, store, notes))
+
+    except Exception as e:
+        print(e)
+
 
 def select_filter(event):
     purchase_name_entry.delete(0, END)
@@ -713,25 +745,34 @@ inventory_table.heading("tradelock", text="Tradelock", anchor=CENTER)
 inventory_table.heading("storage", text="Stored at", anchor=CENTER)
 inventory_table.heading("notes", text="Notes", anchor=CENTER)
 
-inventory_table.grid(column=0, row=1, columnspan=6)
+filter_inv_label = Label(currentinv_tab, text='Filter: ')
+filter_inv_label.grid(column=0, row=1)
+
+filter_inv_var = StringVar(window)
+filter_inv_entry = Entry(currentinv_tab, width=50, justify='center',textvariable=filter_inv_var)
+filter_inv_entry.grid(column=1, row=1,pady=(10,0))
+filter_inv_entry.bind('<KeyRelease>', filter_inventory)
+
+
+inventory_table.grid(column=0, row=2, columnspan=6)
 
 change_tradelock_entry = Entry(currentinv_tab, width=50, justify='center')
-change_tradelock_entry.grid(column=0, row=2,pady=(10,0))
+change_tradelock_entry.grid(column=0, row=3,pady=(10,0))
 
 change_tradelock_button = Button(currentinv_tab, text='Add tradelock(days)',command= lambda: add_tradelock(change_tradelock_entry.get()))
-change_tradelock_button.grid(column=1, row=2,pady=(10,0))
+change_tradelock_button.grid(column=1, row=3,pady=(10,0))
 
 changestorage_combobox = ttk.Combobox(currentinv_tab, width=47, values=store_names)
-changestorage_combobox.grid(column=0, row=3, pady=(20, 0))
+changestorage_combobox.grid(column=0, row=4, pady=(20, 0))
 
 changestorage_button = Button(currentinv_tab, text='Change Storage', command=lambda: change_storage_inv(changestorage_combobox.get()))
-changestorage_button.grid(column=1, row=3, pady=(20, 0))
+changestorage_button.grid(column=1, row=4, pady=(20, 0))
 
 sale_button = Button(currentinv_tab, text='Sell Item', command=sell_item)
-sale_button.grid(column=4, row=4, pady=(20, 0))
+sale_button.grid(column=4, row=5, pady=(20, 0))
 
 removefrominv_button = Button(currentinv_tab, text='Remove Item(Unregister)', command= lambda: remove_from_inv())
-removefrominv_button.grid(column=0, row=4, pady=(20, 0))
+removefrominv_button.grid(column=0, row=5, pady=(20, 0))
 
 load_inventory()
 
